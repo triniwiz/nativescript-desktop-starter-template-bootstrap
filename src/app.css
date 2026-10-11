@@ -1,0 +1,182 @@
+/*
+ * Bootstrap's compiled CSS, unmodified. `postcss-bootstrap-compat.mjs` adapts
+ * the handful of constructs NativeScript can't read yet; everything else is
+ * the same stylesheet a browser would get.
+ *
+ * Dark mode follows the system: `light-dark()` values switch on the `.ns-dark`
+ * class core puts on the root view. `data-bs-theme="dark|light"` pins a
+ * subtree to one theme, as on the web.
+ *
+ * NativeScript also puts platform and device classes on the root view
+ * (.ns-ios, .ns-android, .ns-windows, .ns-phone, .ns-tablet), so
+ * `.ns-windows .navbar { ... }` targets one platform.
+ */
+@import 'bootstrap/dist/css/bootstrap.css';
+
+/* App styles come after Bootstrap's layers, so they win, as on the web. */
+
+/* Browsers carry `min-height` through `aspect-ratio: 1` to the width, which
+   is how Bootstrap squares `.btn-icon`. Taffy doesn't, so give it the width. */
+.btn-icon {
+  min-width: var(--bs-btn-min-height);
+}
+
+.bg-hero {
+  background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #d946ef 100%);
+}
+
+/* A Bootstrap Icon from src/icons.ts, sized to the text around it. */
+.icon {
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* The sidebar's pills sit straight on the sidebar: no track behind them. Overriding
+   Bootstrap's own variables is all it takes, as on the web. */
+.sidebar-nav {
+  --bs-nav-pills-bg: transparent;
+  --bs-nav-pills-padding: 0;
+  --bs-nav-pills-border-radius: 0;
+}
+
+/* The shell's scrolling area takes the space the navbar or sidebar leaves. A zero basis and
+   min size keep it from growing to its content: MasonKit doesn't shrink a <Scroll> below its
+   content the way browsers shrink scroll containers, so with plain flex-fill nothing scrolls. */
+.shell-content {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Bootstrap's .grid reads its gap from --bs-gap. */
+.playground-grid {
+  --bs-gap: 12px;
+}
+
+/* The shell's dialog layer (see AppShell.vue). Native apps have no ::backdrop, so the
+   backdrop is an element, with the values Bootstrap gives .dialog::backdrop. */
+.app-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.app-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.ns-dark .app-backdrop {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+.app-overlay .dialog {
+  margin: 0;
+}
+
+/* Checks, radios and switches. MasonKit draws `appearance: none` inputs as plain boxes and keeps
+   :checked current, so Bootstrap's own box and checked colours apply. Its marks are ::before
+   pseudo-elements, which native views don't have, so they're drawn here as background images
+   instead, in the white Bootstrap gives them (--bs-primary-contrast, --bs-switch-indicator-bg). */
+.check:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m5.5 10 3 3 6-6'/%3e%3c/svg%3e");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.radio:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3ccircle cx='10' cy='10' r='5' fill='white'/%3e%3c/svg%3e");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* The switch's knob rides on its input, which covers the track (border included), and the
+   checked track colour goes there too: Bootstrap sets it with .switch:has(input:checked). */
+.switch input {
+  top: -1px;
+  right: -1px;
+  bottom: -1px;
+  left: -1px;
+  border-radius: 10rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3ccircle cx='10' cy='10' r='8' fill='white'/%3e%3c/svg%3e");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: left center;
+}
+
+.switch input:checked {
+  background-color: var(--bs-switch-checked-bg);
+  background-position: right center;
+}
+
+/* The Components screen's mask demos. */
+.mask-icon {
+  width: 2rem;
+  height: 2rem;
+  background-color: var(--bs-primary-bg);
+  mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath d='M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.5 7.5a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0v3z'/%3e%3c/svg%3e") center / contain no-repeat;
+}
+
+.mask-icon-accent {
+  background-image: linear-gradient(135deg, var(--bs-primary-bg), var(--bs-accent-bg));
+}
+
+.mask-fade {
+  padding: 12px;
+  border-radius: var(--bs-radius-5);
+  background-color: var(--bs-bg-2);
+  mask-image: linear-gradient(to bottom, black 40%, transparent);
+}
+
+/* The Components screen's clip-path and border-image demos. */
+.clip-demo {
+  width: 3rem;
+  height: 3rem;
+  background-image: linear-gradient(135deg, var(--bs-primary-bg), var(--bs-accent-bg));
+}
+
+.clip-circle {
+  clip-path: circle(50%);
+}
+
+.clip-hexagon {
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.clip-inset {
+  clip-path: inset(4px round 12px 0);
+}
+
+/* An 18-unit tile with a notch in the middle of each edge: repeated round the border, the
+   notches perforate it. */
+.ticket {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  color: var(--bs-white);
+  background-image: linear-gradient(135deg, var(--bs-primary-bg), var(--bs-accent-bg));
+  mask-border: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3e%3cpath fill-rule='evenodd' d='M0 0h18v18H0z M6 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0z M18 6a3 3 0 1 0 0 6a3 3 0 1 0 0-6z M6 18a3 3 0 1 0 6 0a3 3 0 1 0-6 0z M0 6a3 3 0 1 0 0 6a3 3 0 1 0 0-6z'/%3e%3c/svg%3e") 6 fill / 12px round;
+}
+
+.gradient-frame {
+  padding: 12px 16px;
+  border: 6px solid transparent;
+  border-image: linear-gradient(135deg, var(--bs-primary-bg), var(--bs-accent-bg)) 1;
+}

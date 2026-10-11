@@ -1,0 +1,43 @@
+{
+  "name": "NSUniversalBootstrap",
+  "main": "src/app.ts",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@nativescript/core": "https://pkg.pr.new/@nativescript/core@6b21744",
+    "@triniwiz/nativescript-masonkit": "^1.0.0-beta.106",
+    "@valor/nativescript-websockets": "^2.0.2",
+    "nativescript-vue": "3.1.2"
+  },
+  "devDependencies": {
+    "@csstools/css-color-parser": "^3.1.0",
+    "@csstools/css-parser-algorithms": "^3.0.5",
+    "@csstools/css-tokenizer": "^3.0.4",
+    "@nativescript/android": "9.1.2-next.2026-09-22-35797332040",
+    "@nativescript/ios": "9.1.0",
+    "@nativescript/types": "~9.1.1",
+    "@nativescript/vite": "https://pkg.pr.new/@nativescript/vite@6b21744",
+    "@nativescript/webpack": "~5.0.38",
+    "@nativescript/windows": "1.0.0-beta.8",
+    "@types/node": "~26.5.0",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vitejs/plugin-vue-jsx": "^5.1.6",
+    "bootstrap": "6.0.0-alpha.1",
+    "bootstrap-icons": "^1.13.2",
+    "nativescript": "9.1.2-dev.2026-10-04-37218525770",
+    "postcss": "^8.5.29",
+    "postcss-logical": "^9.0.2",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.11"
+  },
+  "overrides": {
+    "@nativescript/core": "https://pkg.pr.new/@nativescript/core@6b21744"
+  },
+  "scripts": {
+    "windows": "ns run windows",
+    "ios": "ns run ios",
+    "android": "ns run android",
+    "clean": "ns clean",
+    "report:css": "node scripts/bootstrap-report.mjs"
+  }
+}
