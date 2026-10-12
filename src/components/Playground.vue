@@ -53,8 +53,9 @@ function toggleTag(tag: string) {
 
 const progress = ref(40);
 
-const themeOptions = [
-  { label: 'System', value: undefined },
+const themeOptions: { label: string; value?: string }[] = [
+  // Omit the value for System; HMR strips `value: undefined` as a TS type.
+  { label: 'System' },
   { label: 'Light', value: 'light' },
   { label: 'Dark', value: 'dark' },
 ];
