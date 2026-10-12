@@ -81,12 +81,13 @@ Use npm. `package.json` relies on npm `overrides`.
   `:class="{ active: open }"`. That's also why `bootstrap` is a dev
   dependency: only its CSS is bundled.
 - **Markup:** prefer `<nav>`/`<div>` over `<ol>`/`<li>` for Bootstrap
-  components (MasonKit draws list markers natively), and there are no
-  `<table>`, `<dialog>` or `<details>` elements: use `showDialog()` for
-  dialogs. The Components screen shows what each component needs.
-- **Attributes don't restyle:** core doesn't re-match `[data-bs-theme]` or
-  `[open]` when the value changes. Key the element on it
-  (`:key="theme"`) so Vue rebuilds it.
+  components (MasonKit draws list markers natively). `<details>` and
+  `<summary>` are native, so Bootstrap's accordion is its own markup; there
+  are no `<table>` or `<dialog>` elements: use `showDialog()` for dialogs.
+  The Components screen shows what each component needs.
+- **Attributes don't restyle:** core doesn't re-match `[data-bs-theme]` when
+  the value changes. Key the element on it (`:key="theme"`) so Vue rebuilds
+  it. (`<details>`' `open` is a property, so `[open]` rules do follow it.)
 - **Icons:** `<Icon name="house" />`. Put icons in a `<div class="btn">` or
   `<div class="nav-link">` rather than a `<button>`: a MasonKit button is a
   text view and doesn't draw element children yet.
@@ -117,10 +118,5 @@ These can be removed once the fixes are released:
 - `masonkit-hmr.mjs` stops MasonKit from loading twice during HMR.
 - `src/core-fixes.ts` and parts of `postcss-bootstrap-compat.mjs`; see
   [COMPATIBILITY.md](COMPATIBILITY.md) for which fix each one waits on.
-- **MasonKit:** the starter needs the fixes on MasonKit's `fix/bootstrap-compat`
-  branch (see COMPATIBILITY.md), released after 1.0.0-beta.111. With 111 from
-  npm, Android buttons and badges lose their labels, the shell doesn't scroll
-  on Android, the sidebar doesn't reach the screen edges on iOS, checks and
-  radios draw as green native controls, masks (`.btn-close`, the placeholder
-  wave) draw as solid boxes, and on Android screens you've left keep drawing
-  over the current one.
+- **MasonKit:** needs 1.0.0-beta.113 or later, which has the fixes listed
+  in COMPATIBILITY.md and native `<details>`/`<summary>`.

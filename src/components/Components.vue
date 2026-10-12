@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'nativescript-vue';
 import DemoCard from './DemoCard.vue';
+import Icon from './Icon.vue';
 import { showDialog } from '../dialog';
 
 // Bootstrap's JavaScript needs a DOM, so open/closed/active state lives here.
@@ -12,7 +13,6 @@ const radioOptions = ['A radio', 'Another radio'];
 const radio = ref(radioOptions[0]);
 // The input that raised a change event; MasonKit sends core's EventData.
 const checkedOf = (event: { object: { checked: boolean } }) => event.object.checked;
-const openItem = ref<number | null>(0);
 const toastOpen = ref(true);
 const dialogAnswer = ref('');
 
@@ -27,7 +27,7 @@ async function openDialog() {
 
 const faq = [
   { q: 'Does Bootstrap’s CSS run unchanged?', a: 'Mostly. postcss-bootstrap-compat.mjs bridges the rest at build time.' },
-  { q: 'What about its JavaScript?', a: 'It needs a DOM. Components like this accordion are driven by Vue state.' },
+  { q: 'What about its JavaScript?', a: 'It needs a DOM. This accordion doesn’t need it: it’s native <details> and <summary>.' },
   { q: 'Which elements can I use?', a: 'MasonKit’s HTML-shaped ones: div, section, p, span, ul, ol, li, button, input, …' },
 ];
 
@@ -172,24 +172,23 @@ const rows = [
       <div class="col-12 lg:col-6">
         <DemoCard
           title="Accordion"
-          status="partial"
-          note="Keyed on its open state: core doesn't restyle when the [open] attribute goes away. Toggling also re-wraps the headers until MasonKit ships its layout fix (after 1.0.0-beta.111)."
+          status="works"
+          note="Bootstrap’s own markup: <details> sharing a name open one at a time, with no app state. The open/close transition doesn’t run (no ::details-content or transitions)."
         >
           <div class="accordion">
-            <div
+            <details
               v-for="(item, index) in faq"
-              :key="`${item.q}:${openItem === index}`"
+              :key="item.q"
               class="accordion-item"
-              v-bind="openItem === index ? { open: true } : {}"
+              name="faq"
+              :open="index === 0 || undefined"
             >
-              <div
-                class="accordion-header"
-                @tap="openItem = openItem === index ? null : index"
-              >
+              <summary class="accordion-header">
                 {{ item.q }}
-              </div>
-              <div v-if="openItem === index" class="accordion-body">{{ item.a }}</div>
-            </div>
+                <Icon name="chevron-down" class="accordion-icon" />
+              </summary>
+              <div class="accordion-body">{{ item.a }}</div>
+            </details>
           </div>
         </DemoCard>
       </div>

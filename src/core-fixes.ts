@@ -1,7 +1,6 @@
 import { Color, FixedLength, Length, PercentLength, Style, View, ViewBase } from '@nativescript/core';
 import { KeyframeAnimation, KeyframeAnimationInfo } from '@nativescript/core/ui/animation/keyframe-animation';
 import { cssUnits } from '@triniwiz/nativescript-masonkit';
-import { Style as MasonStyle } from '@triniwiz/nativescript-masonkit/style';
 
 /**
  * Workarounds for gaps Bootstrap runs into at runtime. Each can go once the
@@ -105,63 +104,6 @@ ViewBase.prototype._removeView = function (view: ViewBase) {
   removeView.call(this, view);
   updateStructuralPseudoClasses(this);
 };
-
-/**
- * MasonKit hands `box-shadow` to its native layer as a string, and the native
- * parser doesn't know `color-mix()` or relative colours, so each of
- * Bootstrap's shadow layers (`oklch(from #000 l c h / 0.04)`) fell back to
- * opaque black. Core's `Color` resolves them, so the colours are turned into
- * `rgba()` first. Fixed in MasonKit's `style.ts` (css-colors.ts) after
- * 1.0.0-beta.111; remove this once the starter depends on that release.
- */
-const COLOR_FUNCTION = /^(color-mix|oklch|oklab|lab|lch|hwb|color)\(/i;
-
-function splitTopLevel(value: string, separator: RegExp) {
-  const parts: string[] = [];
-  let depth = 0;
-  let current = '';
-  for (const ch of value) {
-    depth += ch === '(' ? 1 : ch === ')' ? -1 : 0;
-    if (depth === 0 && separator.test(ch)) {
-      parts.push(current);
-      current = '';
-    } else {
-      current += ch;
-    }
-  }
-  return [...parts, current].map((part) => part.trim()).filter(Boolean);
-}
-
-function resolveShadowColors(value: unknown) {
-  if (typeof value !== 'string' || !/(color-mix|okl|lab|lch|hwb|color)\(/i.test(value)) {
-    return value;
-  }
-  return splitTopLevel(value, /,/)
-    .map((layer) =>
-      splitTopLevel(layer, /\s/)
-        .map((token) => {
-          if (!COLOR_FUNCTION.test(token)) {
-            return token;
-          }
-          try {
-            const color = new Color(token);
-            return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a / 255})`;
-          } catch {
-            return token;
-          }
-        })
-        .join(' '),
-    )
-    .join(', ');
-}
-
-const boxShadow = Object.getOwnPropertyDescriptor(MasonStyle.prototype, 'boxShadow')!;
-Object.defineProperty(MasonStyle.prototype, 'boxShadow', {
-  ...boxShadow,
-  set(value: unknown) {
-    boxShadow.set!.call(this, resolveShadowColors(value));
-  },
-});
 
 /**
  * Core plays the first keyframe interval as a jump and holds the last keyframe's

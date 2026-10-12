@@ -4,11 +4,11 @@ How much of Bootstrap's compiled CSS (`bootstrap@6.0.0-alpha.1`,
 `dist/css/bootstrap.css`) runs on NativeScript with MasonKit, what had to be
 bridged, and which upstream fixes would remove each bridge.
 
-Verified on the iOS simulator (iPad Pro 13-inch and iPhone 17 Pro, iOS 26.4)
-and the Android emulator (Pixel 9 Pro, API 36): light and dark mode, a live
-appearance switch, rotation across a breakpoint, the app shell folding below
-`lg`, edge-to-edge layout, scrolling, taps, and HMR CSS updates. Windows wasn't
-run. The **Components** screen in the app shows each component with a Works /
+Verified with MasonKit 1.0.0-beta.113 on the iOS simulator (iPad Pro 13-inch
+and iPhone 17 Pro, iOS 26.4) and the Android emulator (Pixel 9 Pro, API 36):
+light and dark mode, a live appearance switch, rotation across a breakpoint,
+the app shell folding below `lg`, edge-to-edge layout, scrolling, taps, and
+HMR CSS updates. Windows wasn't run. The **Components** screen in the app shows each component with a Works /
 Partial / Broken badge.
 
 ## In numbers
@@ -39,7 +39,8 @@ all.
   on resize (container `max-width`s switch when the iPad rotates across `xl`).
 - **Components** in the playground render as on the web: `.btn` in every
   style and theme, cards, list groups, nav pills, badges, chips, alerts,
-  progress, avatars, form labels and `.form-control`.
+  progress, avatars, form labels and `.form-control`. The accordion is
+  Bootstrap's own `<details>`/`<summary>` markup.
 - **Theming:** `theme-*` and `data-bs-theme` subtrees.
 
 ## What's bridged at build time
@@ -96,11 +97,7 @@ costs.
    views are added or removed, plus the `-of-type` forms (by element type).
    *Fix in core:* match them structurally. `:nth-child()` is still
    unsupported.
-4. **Shadows came out opaque black.** MasonKit hands `box-shadow` to the
-   platform as a string, and the native parsers don't read `color-mix()` or
-   relative colours. The patch resolves them to `rgba()` first. Fixed in
-   MasonKit (see above); drop the patch once that's released.
-5. **Spinners didn't spin.** Core applies the first keyframe interval as a
+4. **Spinners didn't spin.** Core applies the first keyframe interval as a
    jump and holds the last keyframe, so keyframes without a 0% or 100%
    keyframe never animate: `spinner-border` (`to { transform: rotate(360deg) }`)
    jumped to 360° every iteration, and `spinner-grow` (which stops at 50%)
@@ -114,9 +111,9 @@ icon buttons collapsed to slivers.
 
 ## Fixed in MasonKit
 
-On MasonKit's `fix/bootstrap-compat` branch, after 1.0.0-beta.111. The starter
-needs a release with these; with 111 from npm the Android and iOS problems
-below come back.
+Released in MasonKit 1.0.0-beta.112 and 1.0.0-beta.113; the starter requires
+1.0.0-beta.113. Windows has its own implementation of the masking, clipping,
+input and `<details>` features, which wasn't run here.
 
 | Problem | Fix | Tests |
 | --- | --- | --- |
@@ -132,6 +129,9 @@ below come back.
 | Keyframes dropped `mask-position`: core keeps only CssAnimationProperties in keyframes and its native Animation plays a fixed set, so `.placeholder-wave` stood still. | `mask-position` and `mask-size` are CssAnimationProperties, and `css-keyframes.ts` plays them every frame on core's timeline (delay, iterations, timing functions, fill mode, cancel), next to core's own animations. | `css-keyframes.spec.ts` |
 | No `clip-path`, `mask-border` or `-webkit-mask-*`, and `border-image` was stored but never drawn. | `clip-path` basic shapes and boxes (anti-aliased, and clipped-out areas don't take touches); `mask-border` and `border-image` through one 9-slice painter; the `-webkit-mask*` names in JS. iOS `ClipPath.swift`, `NineSlice.swift`; Android `ClipPath.kt`, `NineSlice.kt`. | `ClipPathTests` (19), `NineSliceTests` (14), `ClipPathParsingTest` (17), `NineSliceTest` (23), `ClipPathInstrumentedTest` (17) |
 | SVG backgrounds supported only straight, filled paths: no icon set rendered. | Full SVG path grammar (curves, arcs, relative commands), shapes, strokes, transforms, `currentColor` and `fill-rule` on iOS and Android; Windows hands SVG to `SvgImageSource` (not built here). | `SvgParserTest` (39), `SvgParserTests` (42) |
+| Three `width: 33.3333%` columns (`col-4`, `g-col-4`) summed past 100% in f32, so at some widths the third wrapped onto its own line. | taffy `8411f638`: a line takes an item that overruns it by under 1/64 px. | `flex_wrap_thirds_repro.rs` |
+| No `<details>`/`<summary>`: Bootstrap 6's accordion is built on them, so it needed div markup, Vue state and keyed re-creation. | Native `<details>` and `<summary>` (iOS, Android, Windows): closed content is hidden by mason-core, a summary tap toggles it and fires `toggle`, details sharing a `name` open one at a time, and `open` is a property, so `[open]` rules restyle. | `details.spec.ts`, `details.rs` |
+| A rule that stopped matching left its `color` and `background-color` behind on iOS and Android, so a closed accordion header kept its open colours. | `style.ts`: the setters clear their state when core resets them. | `style.spec.ts` |
 
 ## MasonKit behaviour found by the Components screen
 
@@ -164,22 +164,24 @@ below come back.
 - **`[class*=btn-]` and friends:** core turns any attribute selector on
   `class` into a plain class match, ignoring the operator, so button groups
   keep each button's corners.
-- **Native HTML:** there are no `<table>`, `<dialog>` or `<details>` elements,
-  so tables, dialogs and accordions use other markup and Vue state. Dialogs
+- **Native HTML:** there are no `<table>` or `<dialog>` elements, so tables
+  and dialogs use other markup and Vue state. Dialogs
   come from `showDialog()` (`src/dialog.ts`): the app shell draws the
   backdrop (an element, with `::backdrop`'s values and `backdrop-filter`)
   and the `.dialog` over everything.
-- **Changing an attribute doesn't restyle**, so `[data-bs-theme]` and
-  `[open]` rules don't follow changes. Those elements are keyed on the value
-  so Vue rebuilds them.
+- **Changing an attribute doesn't restyle**, so `[data-bs-theme]` rules don't
+  follow changes; that card is keyed on the value so Vue rebuilds it.
+  `<details>`' `open` is a property, so the accordion's `[open]` rules do.
+- **No `::details-content` or transitions:** the accordion opens and closes
+  without Bootstrap's animation.
 - **Changing a class restyles the whole subtree:** core re-matches every
   descendant's selectors, which takes most of a second on a screen of
   Bootstrap views. The app shell keeps visited screens and shows or hides
   them with an inline `display`, not `d-none`.
 - **Masking gaps:** `url(#id)` references to an SVG `<mask>` or `<clipPath>`
-  (there are no inline SVG elements), and Windows. On iOS a masked or clipped
-  element's outset shadow is hidden. Only `mask-position` and `mask-size`
-  animate among MasonKit's own properties.
+  (there are no inline SVG elements). On iOS a masked or clipped element's
+  outset shadow is hidden. Only `mask-position` and `mask-size` animate among
+  MasonKit's own properties.
 - **Interaction states:** `:hover` and `:focus-visible` rules only apply when
   the native view reports that state. `prefers-reduced-motion` queries never
   match, so motion-gated rules are skipped.
