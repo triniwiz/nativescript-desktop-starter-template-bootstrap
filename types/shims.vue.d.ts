@@ -4,8 +4,8 @@ declare module '*.vue' {
   export default component;
 }
 
-// Vite's `?raw` imports, used for the Bootstrap Icons SVG sources.
-declare module '*.svg?raw' {
-  const source: string;
-  export default source;
+// Vite's SVG asset imports, used for the Bootstrap Icons image URLs.
+declare module '*.svg' {
+  const url: string;
+  export default url;
 }

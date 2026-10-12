@@ -7,7 +7,7 @@ const props = defineProps<{ name: IconName }>();
 // MasonKit draws SVG backgrounds natively. The icons are `fill="currentColor"`, so they take
 // the element's text colour, active and dark-mode states included.
 const backgroundImage = computed(
-  () => `url("data:image/svg+xml,${encodeURIComponent(icons[props.name])}")`,
+  () => `url("${icons[props.name]}")`,
 );
 </script>
 
