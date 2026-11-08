@@ -53,7 +53,7 @@ const features = [
   {
     icon: '◎',
     title: 'One codebase',
-    body: 'The same components run on iOS, Android and Windows.',
+    body: 'The same components run on iOS, Android, Windows and Linux.',
     theme: 'theme-success',
   },
 ];
@@ -77,7 +77,7 @@ const steps = [
       </h1>
       <p class="fs-lg fg-white opacity-75 mb-0">
         Bootstrap 6's own stylesheet, laid out by a Rust engine on iOS,
-        Android and Windows.
+        Android, Windows and Linux.
       </p>
       <div class="d-flex flex-row flex-wrap gap-3 pt-2">
         <button

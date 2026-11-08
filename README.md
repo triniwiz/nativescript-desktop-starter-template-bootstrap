@@ -1,6 +1,6 @@
 # NativeScript Desktop Starter (Bootstrap)
 
-A NativeScript-Vue starter that runs on Windows, iOS and Android. Layout uses
+A NativeScript-Vue starter that runs on Windows, Linux, iOS and Android. Layout uses
 [MasonKit](https://github.com/triniwiz/nativescript-mason) (Flexbox, CSS Grid
 and HTML-style elements), and styling uses
 [Bootstrap 6](https://getbootstrap.com/)'s own compiled CSS.
@@ -11,7 +11,7 @@ for how much of Bootstrap works unchanged and what had to be bridged.
 
 ## Prerequisites
 
-> NativeScript for Windows is in alpha. Expect rough edges.
+> NativeScript for Windows and Linux is in alpha. Expect rough edges.
 
 To run on Windows you need the following. `npx ns doctor windows` checks them.
 
@@ -21,6 +21,14 @@ To run on Windows you need the following. `npx ns doctor windows` checks them.
 | [Node.js](https://nodejs.org) LTS | Provides `npm` and `npx`. |
 | [.NET 10 SDK](https://dotnet.microsoft.com/download) | The build runs `dotnet build`. Check it with `dotnet --version`. |
 | Developer Mode | Settings → Privacy & security → For developers. Windows needs it to install and launch the unsigned debug build. |
+
+To run on Linux you need the following.
+
+| Requirement | Notes |
+| --- | --- |
+| x64 Linux with glibc 2.34 or later | The runtime ships x64 binaries only. Ubuntu 22.04, Debian 12, Fedora 35 and later qualify. |
+| GTK 4 | The app's UI is GTK 4: `libgtk-4-1` on Debian and Ubuntu, `gtk4` on Fedora and Arch. |
+| [Node.js](https://nodejs.org) LTS | Provides `npm` and `npx`. |
 
 For iOS and Android, follow the [NativeScript environment setup](https://docs.nativescript.org/setup/).
 
@@ -32,13 +40,16 @@ You don't need to install the NativeScript CLI globally. It's a dev dependency, 
 git clone <this repo> my-app
 cd my-app
 npm install
-npm run windows   # or: npm run ios / npm run android
+npm run windows   # or: npm run linux / npm run ios / npm run android
 ```
 
-`npm run windows` builds the app, installs and launches it, then syncs your
+`npm run windows` (or `npm run linux`) builds the app, installs and launches it, then syncs your
 changes into it as you save. `npm run clean` removes the build output.
 
 Use npm. `package.json` relies on npm `overrides`.
+
+On macOS and Windows, run `npm install --force`. `@nativescript/linux` only
+declares support for Linux, so a plain `npm install` stops with `EBADPLATFORM`.
 
 ## Project layout
 
@@ -74,7 +85,7 @@ Use npm. `package.json` relies on npm `overrides`.
 - **Dark mode:** follows the system. Put `data-bs-theme="dark"` or `"light"`
   on any element to pin that subtree to one theme.
 - **Platform styles:** NativeScript puts `.ns-ios`, `.ns-android`,
-  `.ns-windows`, `.ns-phone` and `.ns-tablet` on the root view, so
+  `.ns-windows`, `.ns-linux`, `.ns-phone` and `.ns-tablet` on the root view, so
   `.ns-windows .card { … }` targets one platform.
 - **Bootstrap's JavaScript doesn't run:** its plugins (dropdowns, modals,
   collapse, …) need a DOM. Drive those states from Vue instead, e.g.
@@ -100,7 +111,7 @@ Use npm. `package.json` relies on npm `overrides`.
 
 - **Something's missing from your setup:** `npx ns doctor windows` lists what it can't find and how to fix it.
 - **The app builds but won't launch** ("deployment failed"): turn on Developer Mode.
-- **A stale or broken build:** run `npm run clean`, then `npm run windows` again.
+- **A stale or broken build:** run `npm run clean`, then `npm run windows` (or `npm run linux`) again.
 - **A Bootstrap class does nothing:** run `npm run report:css` to see whether
   its property is one NativeScript understands, and check
   [COMPATIBILITY.md](COMPATIBILITY.md).
@@ -110,10 +121,12 @@ Use npm. `package.json` relies on npm `overrides`.
 These can be removed once the fixes are released:
 
 - `@nativescript/core` and `@nativescript/vite` are installed through pkg.pr.new from
-  [NativeScript/NativeScript#11468](https://github.com/NativeScript/NativeScript/pull/11468),
-  which is the `feat/windows` branch plus percentage sizes inside MasonKit layouts.
+  [NativeScript/NativeScript#11620](https://github.com/NativeScript/NativeScript/pull/11620),
+  which is the `feat/linux` branch. It builds on `feat/windows`, which includes
+  percentage sizes inside MasonKit layouts.
 - `@nativescript/windows` is pinned to an exact alpha, because a caret range
   would also match older, incompatible betas.
+- `@nativescript/linux` is pinned to an exact alpha.
 - `bootstrap` is pinned to `6.0.0-alpha.1`, the first v6 release.
 - `masonkit-hmr.mjs` stops MasonKit from loading twice during HMR.
 - `src/core-fixes.ts` and parts of `postcss-bootstrap-compat.mjs`; see

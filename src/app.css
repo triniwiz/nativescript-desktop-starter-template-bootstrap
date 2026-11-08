@@ -8,7 +8,7 @@
  * subtree to one theme, as on the web.
  *
  * NativeScript also puts platform and device classes on the root view
- * (.ns-ios, .ns-android, .ns-windows, .ns-phone, .ns-tablet), so
+ * (.ns-ios, .ns-android, .ns-windows, .ns-linux, .ns-phone, .ns-tablet), so
  * `.ns-windows .navbar { ... }` targets one platform.
  */
 @import 'bootstrap/dist/css/bootstrap.css';
