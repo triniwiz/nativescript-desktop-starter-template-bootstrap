@@ -128,7 +128,6 @@ These can be removed once the fixes are released:
   would also match older, incompatible betas.
 - `@nativescript/linux` is pinned to an exact alpha.
 - `bootstrap` is pinned to `6.0.0-alpha.1`, the first v6 release.
-- `masonkit-hmr.mjs` stops MasonKit from loading twice during HMR.
 - `src/core-fixes.ts` and parts of `postcss-bootstrap-compat.mjs`; see
   [COMPATIBILITY.md](COMPATIBILITY.md) for which fix each one waits on.
 - **MasonKit:** needs 1.0.0-beta.113 or later, which has the fixes listed
