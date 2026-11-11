@@ -57,7 +57,7 @@ declares support for Linux, so a plain `npm install` stops with `EBADPLATFORM`.
 | --- | --- |
 | `src/app.ts` | App entry. Loads `core-fixes.ts` and registers MasonKit's elements. |
 | `src/app.css` | Imports Bootstrap, then your own styles, including stand-ins for the check, radio and switch marks. |
-| `src/core-fixes.ts` | Runtime workarounds Bootstrap needs from core and MasonKit (see [COMPATIBILITY.md](COMPATIBILITY.md)). |
+| `src/core-fixes.ts` | Adds the `:first-child`/`:last-child` matching Bootstrap needs from core (see [COMPATIBILITY.md](COMPATIBILITY.md)). |
 | `src/components/AppShell.vue` | Sidebar from the `lg` breakpoint up, a navbar with a menu below it. Draws edge to edge, under the status bar and home indicator. |
 | `src/navigation.ts` | The screen list and the current screen. Set `currentScreen` to navigate. |
 | `src/dialog.ts` | `showDialog({ title, body })`: a Bootstrap `.dialog` over a backdrop, drawn by the app shell. Resolves `true` when confirmed. |
@@ -128,7 +128,8 @@ These can be removed once the fixes are released:
   would pick up newer betas before they're tested with this template.
 - `@nativescript/linux` is pinned to an exact alpha.
 - `bootstrap` is pinned to `6.0.0-alpha.1`, the first v6 release.
-- `src/core-fixes.ts` and parts of `postcss-bootstrap-compat.mjs`; see
+- `src/core-fixes.ts`, which adds `:first-child`/`:last-child` matching, and
+  parts of `postcss-bootstrap-compat.mjs`; see
   [COMPATIBILITY.md](COMPATIBILITY.md) for which fix each one waits on.
 - **MasonKit:** needs 1.0.0-beta.113 or later, which has the fixes listed
   in COMPATIBILITY.md and native `<details>`/`<summary>`.

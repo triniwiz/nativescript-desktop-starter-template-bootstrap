@@ -63,10 +63,6 @@
  * |              | drawn in it). Every `color` is mirrored into a custom property, |
  * |              | which inherits just as `color` does, and `currentcolor` reads   |
  * |              | it.                                                             |
- * | `animation`  | Core builds keyframe animations from the raw declarations, once |
- * |              | per rule, before `var()` is resolved, so spinners never spun.  |
- * |              | `var()`s in `animation` are filled in from rules with the same  |
- * |              | selector, and in `@keyframes` from variables with one value.    |
  * | `keywords`   | Values core reads differently: `background: none` leaves the    |
  * |              | background color unset (so a native button keeps its own)       |
  * |              | rather than `transparent`, `font-weight: bolder`/`lighter` are  |
@@ -101,7 +97,6 @@ const DEFAULTS = {
   borders: true,
   inherit: true,
   currentColor: true,
-  animation: true,
   keywords: true,
   media: true,
   logical: true,
@@ -257,9 +252,6 @@ function transforms(opts) {
       if (opts.currentColor) {
         emulateCurrentColor(root);
       }
-      if (opts.animation) {
-        resolveAnimationVariables(root);
-      }
     },
   };
 }
@@ -309,61 +301,6 @@ function emulateInherit(root) {
         }
       });
     }
-  });
-}
-
-function resolveAnimationVariables(root) {
-  // Custom properties by selector, from rules outside `@media`.
-  const bySelector = new Map();
-  root.walkRules((rule) => {
-    if (rule.parent.type !== 'root') {
-      return;
-    }
-    rule.each((decl) => {
-      if (decl.type === 'decl' && decl.prop.startsWith('--')) {
-        for (const selector of rule.selectors) {
-          const vars = bySelector.get(selector) ?? new Map();
-          vars.set(decl.prop, decl.value);
-          bySelector.set(selector, vars);
-        }
-      }
-    });
-  });
-  const resolve = (value, selector) =>
-    replaceFunction(value, 'var', (args) => {
-      const [name, fallback] = splitArgs(args);
-      return bySelector.get(selector)?.get(name) ?? fallback ?? `var(${args})`;
-    });
-  root.walkDecls(/^animation/, (decl) => {
-    const rule = decl.parent;
-    if (!decl.value.includes('var(') || rule.type !== 'rule') {
-      return;
-    }
-    const values = rule.selectors.map((selector) => resolve(decl.value, selector));
-    if (new Set(values).size === 1) {
-      decl.value = values[0];
-      return;
-    }
-    // `.spinner-border, .spinner-grow` share the rule but not the keyframes.
-    rule.selectors.forEach((selector, i) => {
-      rule.after(rule.clone({ selectors: [selector], nodes: [decl.clone({ value: values[i] })] }));
-    });
-    decl.remove();
-  });
-
-  // Keyframes have no element to resolve against; use variables with a single value.
-  const values = new Map();
-  root.walkDecls(/^--/, (decl) => {
-    values.set(decl.prop, (values.get(decl.prop) ?? new Set()).add(decl.value));
-  });
-  root.walkAtRules('keyframes', (keyframes) => {
-    keyframes.walkDecls((decl) => {
-      decl.value = replaceFunction(decl.value, 'var', (args) => {
-        const [name, fallback] = splitArgs(args);
-        const set = values.get(name);
-        return set?.size === 1 ? [...set][0] : (fallback ?? `var(${args})`);
-      });
-    });
   });
 }
 

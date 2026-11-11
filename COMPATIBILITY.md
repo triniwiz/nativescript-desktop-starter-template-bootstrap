@@ -66,48 +66,36 @@ costs.
 | `borders` | MasonKit registers `border` as a property of its own, not a shorthand for longhands, so a later `border-width: 0 0 1px` doesn't override `border: 1px solid …`. Flush list groups kept side borders that doubled the card's. `border` and `border-<side>` are expanded into width/style/color. | MasonKit: expand `border`/`border-<side>` into longhands, as it does `border-width`. |
 | `inherit` | Core has no `inherit` keyword. On inherited properties it becomes `unset` (equivalent there); `--x: inherit` is dropped (core looks variables up on the parent anyway). For the rest (a list group item's corner radii, `border-color`, `flex-wrap`) each declared value is mirrored into a `--ns-inherit-<prop>` custom property, which core does pass down. | Core: `inherit` for every property. |
 | `currentColor` | Core can't parse `currentcolor`; spinners and placeholders are drawn in it and were invisible. Every `color` is mirrored into `--ns-current-color`, which inherits like `color`, and `currentcolor` reads it. | Core: `currentcolor`. |
-| `animation` | Core builds keyframe animations from a rule's raw declarations, once, before `var()` is resolved, so spinners didn't spin; a `var()` inside `@keyframes` (the placeholder pulse) also broke the layout of everything after it. Variables are filled in from rules with the same selector, and in keyframes from variables with a single value. | Core: resolve variables in animations per element. |
 | `keywords` | `background: none` sets `background-color` to unset rather than `transparent`, so a native button keeps its own background (`.nav-link` pills). `font-weight: bolder` is rejected. MasonKit has `list-style-type`/`-position` but not the `list-style` shorthand. | Core: `background` shorthand initial values; relative font weights. MasonKit: `list-style`. |
 | `media` | Core's media parser doesn't know range syntax `(width >= 576px)`, which every Bootstrap 6 breakpoint uses, so they never matched. It also compares `px` to physical pixels, so a 2× screen hit each breakpoint at half the width. Rewritten to `(min-width: 576)` (dp). | Core: range syntax; CSS px in media queries. |
 | `logical` | Neither core nor MasonKit registers logical properties. Bootstrap 6 writes spacing utilities, `.container` padding and `.row` gutters with them (about 1,400 declarations; coverage goes from 66% to 92.5% with this alone). Mapped left-to-right with `postcss-logical`. | MasonKit: `margin-inline`, `padding-block-*`, `inset-*`, `border-*-radius` logical forms, ideally direction-aware. |
 
 ## What's patched at runtime
 
-`src/core-fixes.ts`:
-
-1. **Forward-referenced custom properties crash core.** Bootstrap declares
-   `--a: var(--b)` before `--b` throughout. `settleCssVariables` stores the
-   `unsetValue` sentinel for `--a` on its first pass, and the next pass calls
-   `.trim()` on it (`TypeError: cssVariableValue?.trim is not a function`).
-   That aborts styling of the root view, so the app renders blank. The patch
-   reads non-string values as `null` (guaranteed-invalid, as on the web).
-   *Fix in core:* don't store `unsetValue` as a variable value, or guard
-   `_evaluateCssVariableExpression`.
-2. **`gap: 0.5rem` became 0.5 dp.** MasonKit's `row-gap`/`column-gap` go
-   through core's `PercentLength.parse`, which reads rem with `parseFloat`.
-   The patch teaches core's length parsers rem (and em as rem) using
-   MasonKit's `cssUnits.rootFontSize`. *Fix in MasonKit:* use its own
-   rem-aware `tokenToDevicePx` for the gap properties, as for other lengths.
-
-3. **No structural pseudo-classes.** Core treats `:first-child` and
-   `:last-child` as states a view reports, like `:active`, and none ever does.
-   Bootstrap uses them 292 times: the ends of list groups, button and input
-   groups, and cards. The patch keeps `first-child`, `last-child` and
-   `only-child` set as pseudo-class states on each parent's children when
-   views are added or removed, plus the `-of-type` forms (by element type).
-   *Fix in core:* match them structurally. `:nth-child()` is still
-   unsupported.
-4. **Spinners didn't spin.** Core applies the first keyframe interval as a
-   jump and holds the last keyframe, so keyframes without a 0% or 100%
-   keyframe never animate: `spinner-border` (`to { transform: rotate(360deg) }`)
-   jumped to 360° every iteration, and `spinner-grow` (which stops at 50%)
-   never faded back out. The patch adds the missing ends and fills them with
-   the view's own values when the animation plays, as CSS does. *Fix in
-   core:* use the element's values for missing 0%/100% keyframes.
+`src/core-fixes.ts` works around **missing structural pseudo-classes.** Core
+treats `:first-child` and `:last-child` as states a view reports, like
+`:active`, and none ever does. Bootstrap uses them 292 times: the ends of list
+groups, button and input groups, and cards. The patch keeps `first-child`,
+`last-child` and `only-child` set as pseudo-class states on each parent's
+children when views are added or removed, plus the `-of-type` forms (by
+element type). *Fix in core:* match them structurally. `:nth-child()` is still
+unsupported.
 
 `src/app.css` also gives `.btn-icon` a `min-width`. Browsers carry
 `min-height` through `aspect-ratio: 1` to the width; Taffy doesn't, so square
 icon buttons collapsed to slivers.
+
+## Fixed in core
+
+These are fixed in `@nativescript/core`, and their patches are gone. Checked
+on the iOS simulator (iPhone 17 Pro) against the pkg.pr.new build `3456c82`:
+
+| Problem | Fix |
+| --- | --- |
+| Forward-referenced custom properties (`--a: var(--b)` before `--b`) crashed `settleCssVariables` with `cssVariableValue?.trim is not a function`, and the app rendered blank. | [#11527](https://github.com/NativeScript/NativeScript/pull/11527): order-independent custom properties, and no crash on unresolvable ones. |
+| `gap: 0.5rem` became 0.5 dp: `row-gap`/`column-gap` go through core's `PercentLength.parse`, which read rem with `parseFloat`. | [#11533](https://github.com/NativeScript/NativeScript/pull/11533): rem lengths. |
+| Keyframes without a 0% or 100% keyframe never animated: `spinner-border` jumped to 360° every iteration, and `spinner-grow` never faded back out. | [#11528](https://github.com/NativeScript/NativeScript/pull/11528): missing ends animate from and to the view's own values. |
+| Keyframe animations were built from a rule's raw declarations before `var()` was resolved, so spinners didn't spin, and a `var()` inside `@keyframes` broke the layout after it. This was the `animation` transform. | [#11534](https://github.com/NativeScript/NativeScript/pull/11534): `var()` resolved in animations and keyframes per view. |
 
 ## Fixed in MasonKit
 
@@ -204,8 +192,6 @@ input and `<details>` features, which wasn't run here.
 MasonKit already resolves rem for most properties. The rem problems left
 come from places MasonKit hands off to core or doesn't evaluate:
 
-- `row-gap`/`column-gap` use core's `PercentLength.parse`, which reads
-  `0.5rem` as 0.5. Using MasonKit's own `tokenToDevicePx` there fixes it.
 - `calc()`, `clamp()`, `min()` and `max()` reach MasonKit either unevaluated
   (core only evaluates `calc(`, and can't mix rem with px) or not at all, and
   collapse to 0. If MasonKit evaluated them itself, with its root font size
@@ -217,22 +203,19 @@ Rem support doesn't help with the other edge problems. `:first-child` and
 
 ## Suggested upstream fixes, by payoff
 
-1. **Core:** the `settleCssVariables` crash. Any stylesheet with
-   forward-referencing custom properties renders blank.
-2. **`@nativescript/vite`:** a parser that survives `@layer` and
+1. **`@nativescript/vite`:** a parser that survives `@layer` and
    `@container`. Without one, modern CSS frameworks are cut off at the first
    one.
-3. **MasonKit:** logical properties. This is the single biggest declaration
+2. **MasonKit:** logical properties. This is the single biggest declaration
    gap.
-4. **MasonKit:** evaluate `calc()`/`clamp()`/`min()`/`max()` with rem/vw,
-   resolve rem in `gap`, expand `border` and `list-style` into longhands,
+3. **MasonKit:** evaluate `calc()`/`clamp()`/`min()`/`max()` with rem/vw,
+   expand `border` and `list-style` into longhands,
    inherit `list-style-*`, draw a button's element children, group radios,
    and apply static inline styles on Android.
-5. **Core:** `:first-child`/`:last-child`/`:nth-child()`, `inherit`,
+4. **Core:** `:first-child`/`:last-child`/`:nth-child()`, `inherit`,
    `currentcolor`, `:has()`, and `[class*=…]` matching. Restyle on attribute
-   changes, and only the descendants a class change can affect. Implicit 0%/100%
-   keyframes.
-6. **Core:** `@layer`, `:root` and `light-dark()`. Media range syntax with
+   changes, and only the descendants a class change can affect.
+5. **Core:** `@layer`, `:root` and `light-dark()`. Media range syntax with
    CSS px.
-7. **Core:** colour functions beyond `color-mix()`, including inside
+6. **Core:** colour functions beyond `color-mix()`, including inside
    shorthands. `[hidden]` boolean matching and `background: none`.
